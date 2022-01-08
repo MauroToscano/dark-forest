@@ -22,6 +22,7 @@ template Spawn() {
     signal ySq;
     signal rSqMin;
     signal rSqMax;
+    signal output out;
 
     //16 is the number of bits the number has
     //Since X <= 32 and Y <= 32 
@@ -40,6 +41,7 @@ template Spawn() {
     less32.in[0] <== xSq + ySq;
     less32.in[1] <== rSqMin;
     less32.out === 0;
+    out <== 1;
  }
 
  component main = Spawn();
