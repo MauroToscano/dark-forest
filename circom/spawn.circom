@@ -13,6 +13,7 @@ have spawned within the last 5 minutes
 pragma circom 2.0.0;
 
 include "./lib/comparators.circom";
+include "./lib/mimcsponge.circom";
 
 template Spawn() {
 
@@ -41,7 +42,16 @@ template Spawn() {
     less32.in[0] <== xSq + ySq;
     less32.in[1] <== rSqMin;
     less32.out === 0;
-    out <== 1;
+
+
+    //2 Inputs, 220 rounds, 1 output
+    component mimc = MiMCSponge(2, 220, 1);
+
+    mimc.ins[0] <== x;
+    mimc.ins[1] <== y;
+    mimc.k <== 0;
+
+    out <== mimc.outs[0];
  }
 
  component main = Spawn();

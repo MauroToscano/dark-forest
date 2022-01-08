@@ -1,8 +1,7 @@
 clean:
 	rm -dr out/*_cpp
 	rm -dr out/*_js
-	rm out/*.r1cs
-	rm out/*.sym
+	rm out/*
 
 build:
 	circom *.circom --r1cs --wasm --sym --c -o out/
@@ -26,4 +25,6 @@ proove:
 verify:
 	snarkjs groth16 verify out/verification_key.json out/public.json out/proof.json
 
-verifier:
+solidity_call:
+	 snarkjs generatecall out/public.json out/proof.json
+	
