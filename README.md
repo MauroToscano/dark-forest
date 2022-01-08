@@ -12,3 +12,8 @@ make init
 ## To install truffle (Outside nix)
 
 npm install -g truffle
+
+##To run a test network and deploy
+
+truffle develop
+migrate
