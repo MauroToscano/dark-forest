@@ -19,7 +19,15 @@ contract Positions is Verifier {
             verifyProof(a,b,c,input),
             "Failed proof check"
         );
+
+        /*
+            There should be another require in the future, 
+            as to take in account the 5 mins windows.
+
+            It may be needed to store a timestamp along with the position
+        */
         require(!positions_used[input[0]], "Position is already occupied");
+
         positions_used[input[0]] = true;
     }
 }
