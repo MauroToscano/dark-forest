@@ -10,12 +10,14 @@ import useWeb3Modal from "./hooks/useWeb3Modal";
 import { addresses, abis } from "@project/contracts";
 import GET_TRANSFERS from "./graphql/subgraph";
 
+import positionsAbi from "./abis/Positions.json"
+
+import { ethers } from "ethers";
+
 const snarkjs = require("snarkjs");
 
 const wasm = 'spawn.wasm'
 const zkey = 'spawn_0001.zkey'
-const INPUTS_FILE = '/tmp/inputs'
-const WITNESS_FILE = '/tmp/witness'
 const wc = require('./witness_calculator.js')
 
 const fs = require('fs')
@@ -95,11 +97,45 @@ function App() {
   const [provider, loadWeb3Modal, logoutOfWeb3Modal] = useWeb3Modal();
 
 
+  //Code from ETH scaffold with circuits
+  function parseSolidityCalldata(prf, sgn) {
+    // let i = [];
+    // while (i[i.length-1] != -1) {
+    //    i.push(str.indexOf('"', i[i.length-1]+1));
+    // }
+    // i.pop();
+    // let data = [];
+    // for (let j = 0; j<i.length-1; j+=2) {
+    //   data.push(str.slice(i[j]+1, i[j+1]));
+    // }
+    // let calldata = [
+    //   [data[0].slice(2), data[1].slice(2)],
+    //   [
+    //     [data[2].slice(2), data[3].slice(2)],
+    //     [data[4].slice(2), data[5].slice(2)]
+    //   ],
+    //   [data[6].slice(2), data[7].slice(2)],
+    //   [data[8].slice(2), data[9].slice(2)]
+    // ];
+
+    let calldata = [
+      [prf.pi_a[0], prf.pi_a[1]],
+      [
+        [prf.pi_b[0][1], prf.pi_b[0][0]],
+        [prf.pi_b[1][1], prf.pi_b[1][0]]
+      ],
+      [prf.pi_c[0], prf.pi_c[1]],
+      [...sgn]
+    ];
+
+    return calldata;
+  }
+
   /*
   Full proove isn't working, a workaround posted in:
   https://github.com/iden3/snarkjs/issues/107
-  TO DO: Update when the issue is fixed, else For a release version, 
-  change how it's done as to not use a fetch
+
+  Adapted it to work in the frontend
   */
 
 
@@ -118,8 +154,6 @@ function App() {
    });
 
   async function initializePosition() {
-    console.log(process.version);
-
     if(provider){
       const inputs = { x: 25, y: 25 } // replace with your signals
       const buffer = await getBinaryPromise()
@@ -127,7 +161,35 @@ function App() {
       const buff = await witnessCalculator.calculateWTNSBin(inputs, 0);
       const { proof, publicSignals } = await snarkjs.groth16.prove(zkey,buff)
       console.log("Pub: ", publicSignals)
-      console.log("Proof: ",  proof)
+      console.log("Proof: ", proof)
+
+      let signer = await provider.getSigner();
+
+      //Curently using truffle default contract address
+      const contractAddress = "0x3b58A6bFD71e19F6b23978145048962C51a3E3FB"
+
+      const position_contract 
+      = new ethers.Contract(
+        contractAddress, 
+        positionsAbi.abi, 
+        signer)
+
+      const callData =  parseSolidityCalldata(proof, publicSignals)
+
+      console.log("Calldata: ", ...callData)
+      let transaction;
+      try {
+          transaction = 
+              await position_contract.insert_position(
+                ...callData
+              ,
+              { gasLimit: 400000 })
+          await transaction.wait()
+          console.log("Inserted data")
+      } catch(err) {
+          console.log("Error")
+          console.log(err)
+      }
     }
   }
   
