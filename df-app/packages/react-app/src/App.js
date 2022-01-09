@@ -96,6 +96,9 @@ function App() {
   const { loading, error, data } = useQuery(GET_TRANSFERS);
   const [provider, loadWeb3Modal, logoutOfWeb3Modal] = useWeb3Modal();
 
+  const [x, setX] = useState(0);
+  const [y, setY] = useState(0);
+  const [errorMessage, setErrorMessage] = useState("");
 
   //Code from ETH scaffold with circuits
   function parseSolidityCalldata(prf, sgn) {
@@ -155,10 +158,20 @@ function App() {
 
   async function initializePosition() {
     if(provider){
-      const inputs = { x: 25, y: 25 } // replace with your signals
+      const inputs = {x,y} // replace with your signals
       const buffer = await getBinaryPromise()
       const witnessCalculator = await wc(buffer)
-      const buff = await witnessCalculator.calculateWTNSBin(inputs, 0);
+      let buff;
+
+      try{
+        buff = await witnessCalculator.calculateWTNSBin(inputs, 0);
+        setErrorMessage("")
+
+      }catch(err){
+        console.log("Error: ", err)
+        setErrorMessage("Position not validid \n 32 < d({x,y},{0,0}) < 64")
+        return
+      }
       const { proof, publicSignals } = await snarkjs.groth16.prove(zkey,buff)
       console.log("Pub: ", publicSignals)
       console.log("Proof: ", proof)
@@ -189,6 +202,7 @@ function App() {
       } catch(err) {
           console.log("Error")
           console.log(err)
+          setErrorMessage("Position already taken")
       }
     }
   }
@@ -198,9 +212,6 @@ function App() {
       console.log({ transfers: data.transfers });
     }
   }, [loading, error, data]);
-
-  console.log("Version")
-  console.log(process.version)
 
   return (
     <div>
@@ -212,9 +223,23 @@ function App() {
         Dark Forest
       </Header>
       <Body>
+        <div style={{ margin: '2%' }} >
+          <label>
+            x:
+            <input type="number" onChange={e => setX(e.target.value)} />        
+          </label>
+          <label>
+            y:
+            <input type="number" onChange={e => setY(e.target.value)} />        
+          </label>
+        </div>
         <Button onClick={() => initializePosition()}>
           Initialize Position
-        </Button>
+        </Button>   
+        {errorMessage && (
+          <p className="error"> { errorMessage } </p>
+        )}
+
       </Body>
     </div>
   );
