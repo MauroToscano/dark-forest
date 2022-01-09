@@ -6,9 +6,8 @@ clean:
 build:
 	circom *.circom --r1cs --wasm --sym --c -o out/
 
-compute_witness:
-	node out/spawn_js/generate_witness.js out/spawn_js/spawn.wasm example_inputs/valid_input.json out/spawn_js/witness.wtns
-	
+
+
 start_ceremony:
 	snarkjs powersoftau new bn128 12 out/pot12_0000.ptau -v
 	snarkjs powersoftau contribute out/pot12_0000.ptau out/pot12_0001.ptau --name="First contribution" -v
@@ -19,12 +18,16 @@ start_ceremony:
 	snarkjs zkey export verificationkey out/spawn_0001.zkey out/verification_key.json
 	snarkjs zkey export solidityverifier out/spawn_0001.zkey out/verifier.sol
 
-proove:
+#Requires
+#generate_witness.js, spawn.wasm, input.json
+#spawn_0001.zkey
+generate_proof:
+	node out/spawn_js/generate_witness.js out/spawn_js/spawn.wasm example_inputs/valid_input.json out/spawn_js/witness.wtns
 	snarkjs groth16 prove out/spawn_0001.zkey out/spawn_js/witness.wtns out/proof.json out/public.json
-
-verify:
-	snarkjs groth16 verify out/verification_key.json out/public.json out/proof.json
 
 solidity_call:
 	 snarkjs generatecall out/public.json out/proof.json
 	
+verify:
+	snarkjs groth16 verify out/verification_key.json out/public.json out/proof.json
+
