@@ -33,3 +33,6 @@ Chain ID: 1337
 And import a test account with a test private key, for example:
 
 6c2db00191d7dc4fc3a2c32de362aebcb9f79bede3818524115d1fc4f875769c
+
+(If deploying with remix or other tool, Truffle can be skipped, ganache cli is included in the nix-shell)
+
