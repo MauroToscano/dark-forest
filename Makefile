@@ -7,3 +7,5 @@ ifndef circom
 	sudo rm -rd circom_repo/
 endif	
 
+start_app:
+	(cd df-app/packages/react-app && yarn start)
