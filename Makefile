@@ -8,4 +8,4 @@ ifndef circom
 endif	
 
 start_app:
-	(cd df-app/packages/react-app && yarn start)
+	(cd df-app/packages/react-app && yarn install && yarn start)
