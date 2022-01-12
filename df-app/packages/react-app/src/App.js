@@ -78,8 +78,11 @@ function App() {
   const { loading, error, data } = useQuery(GET_TRANSFERS);
   const [provider, loadWeb3Modal, logoutOfWeb3Modal] = useWeb3Modal();
 
-  const [x, setX] = useState(0);
-  const [y, setY] = useState(0);
+  const [xInput, setXInput] = useState();
+  const [yInput, setYInput] = useState();
+  const [currentX, setCurrentX] = useState();
+  const [currentY, setCurrentY] = useState();
+
   const [errorMessage, setErrorMessage] = useState("");
 
   //Code from ETH scaffold with circuits
@@ -140,7 +143,7 @@ function App() {
 
   async function initializePosition() {
     if(provider){
-      const inputs = {x,y} // replace with your signals
+      const inputs = {x: xInput,y: yInput} // replace with your signals
       const buffer = await getBinaryPromise()
       const witnessCalculator = await wc(buffer)
       let buff;
@@ -180,6 +183,8 @@ function App() {
               ,
               { gasLimit: 400000 })
           await transaction.wait()
+          setCurrentX(xInput)
+          setCurrentY(yInput)
           console.log("Inserted data")
       } catch(err) {
           console.log("Error")
@@ -205,23 +210,34 @@ function App() {
         Dark Forest
       </Header>
       <Body>
+        {currentX ?
+          <label>Write the position where you want to move</label>
+          :
+          <label>Write the position where you want to spawn</label>
+        }
         <div style={{ margin: '2%' }} >
           <label>
             x:
-            <input type="number" onChange={e => setX(e.target.value)} />        
+            <input type="number" onChange={e => setXInput(e.target.value)} />        
           </label>
           <label>
             y:
-            <input type="number" onChange={e => setY(e.target.value)} />        
+            <input type="number" onChange={e => setYInput(e.target.value)} />        
           </label>
         </div>
-        <Button onClick={() => initializePosition()}>
-          Initialize Position
-        </Button>   
-        {errorMessage && (
-          <p className="error"> { errorMessage } </p>
-        )}
+        {currentY ?  
+          <Button onClick={() => initializePosition()}>
+            Move to position
+          </Button> :
 
+          <Button onClick={() => initializePosition()}>
+            Initialize Position
+          </Button>
+        }   
+        {errorMessage && (
+            <p className="error"> { errorMessage } </p>
+          )
+        }
       </Body>
     </div>
   );
