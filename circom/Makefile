@@ -15,14 +15,14 @@ start_initial_ceremony:
 start_spawn_ceremony:
 	snarkjs groth16 setup out/spawn.r1cs out/pot12_final.ptau out/spawn_0000.zkey
 	snarkjs zkey contribute out/spawn_0000.zkey out/spawn_0001.zkey --name="1st Contributor Name" -v
-	snarkjs zkey export verificationkey out/spawn_0001.zkey out/verification_key.json
-	snarkjs zkey export solidityverifier out/spawn_0001.zkey out/verifier.sol
+	snarkjs zkey export verificationkey out/spawn_0001.zkey out/spawn_verification_key.json
+	snarkjs zkey export solidityverifier out/spawn_0001.zkey out/spawn_verifier.sol
 
 start_move_ceremony:
 	snarkjs groth16 setup out/move.r1cs out/pot12_final.ptau out/move_0000.zkey
 	snarkjs zkey contribute out/move_0000.zkey out/move_0001.zkey --name="1st Contributor Name" -v
 	snarkjs zkey export verificationkey out/move_0001.zkey out/move_verification_key.json
-	snarkjs zkey export solidityverifier out/move_0001.zkey out/verifier.sol
+	snarkjs zkey export solidityverifier out/move_0001.zkey out/move_verifier.sol
 
 #Requires
 #generate_witness.js, spawn.wasm, input.json
