@@ -3,9 +3,9 @@ pragma solidity ^0.6.11;
 
 //It requires the verifier .sol generated
 //using circom
-import './Verifier.sol';
+import './Verifiers.sol';
 
-contract Positions is Verifier {
+contract Positions is SpawnVerifier, MoveVerifier {
 
     mapping (uint256 => bool) public positions_used;
 
@@ -16,7 +16,7 @@ contract Positions is Verifier {
             uint[1] memory input) 
     public{
         require(
-            verifyProof(a,b,c,input),
+            spawnVerifyProof(a,b,c,input),
             "Failed proof check"
         );
 
