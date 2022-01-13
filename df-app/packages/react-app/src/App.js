@@ -12,9 +12,12 @@ import { ethers } from "ethers";
 
 const snarkjs = require("snarkjs");
 
-const wasm = 'spawn.wasm'
-const zkey = 'spawn_0001.zkey'
-const wc = require('./witness_calculator.js')
+const spawn_wasm = 'spawn.wasm'
+const spawn_zkey = 'spawn_0001.zkey'
+const move_wasm = 'move.wasm'
+const move_zkey = 'move_0001.zkey'
+const witness_calculator_spawn = require('./witness_calculator_spawn.js')
+const witness_calculator_move = require('./witness_calculator_move.js')
 
 function WalletButton({ provider, loadWeb3Modal, logoutOfWeb3Modal }) {
   const [account, setAccount] = useState("");
@@ -127,12 +130,26 @@ function App() {
   */
 
 
-  const getBinaryPromise = () => new Promise((resolve, reject) => {
-    fetch(wasm, { credentials: 'same-origin' })
+  const getBinaryPromiseSpawn = () => new Promise((resolve, reject) => {
+    fetch(spawn_wasm, { credentials: 'same-origin' })
       .then(
         response => {
          if (!response['ok']) {
-          throw "failed to load wasm binary file at '" + wasm + "'";
+          throw "failed to load wasm binary file at '" + spawn_wasm + "'";
+         }
+         return response['arrayBuffer']();
+        }
+      )
+      .then(resolve)
+      .catch(reject);
+   });
+  
+   const getBinaryPromiseMove = () => new Promise((resolve, reject) => {
+    fetch(move_wasm, { credentials: 'same-origin' })
+      .then(
+        response => {
+         if (!response['ok']) {
+          throw "failed to load wasm binary file at '" + move_wasm + "'";
          }
          return response['arrayBuffer']();
         }
@@ -141,11 +158,12 @@ function App() {
       .catch(reject);
    });
 
+
   async function initializePosition() {
     if(provider){
       const inputs = {x: xInput,y: yInput} // replace with your signals
-      const buffer = await getBinaryPromise()
-      const witnessCalculator = await wc(buffer)
+      const buffer = await getBinaryPromiseSpawn()
+      const witnessCalculator = await witness_calculator_spawn(buffer)
       let buff;
 
       try{
@@ -157,7 +175,7 @@ function App() {
         setErrorMessage("Position not validid \n 32 < d({x,y},{0,0}) < 64")
         return
       }
-      const { proof, publicSignals } = await snarkjs.groth16.prove(zkey,buff)
+      const { proof, publicSignals } = await snarkjs.groth16.prove(spawn_zkey,buff)
       console.log("Pub: ", publicSignals)
       console.log("Proof: ", proof)
 
@@ -178,14 +196,14 @@ function App() {
       let transaction;
       try {
           transaction = 
-              await position_contract.insert_position(
+              await position_contract.insert_initial_position(
                 ...callData
               ,
               { gasLimit: 400000 })
           await transaction.wait()
           setCurrentX(xInput)
           setCurrentY(yInput)
-          console.log("Inserted data")
+          console.log("Initialized position")
       } catch(err) {
           console.log("Error")
           console.log(err)
@@ -194,6 +212,61 @@ function App() {
     }
   }
   
+  async function moveToPosition() {
+    if(provider){
+      const inputs = {x1: currentX, y1: currentY, x2: xInput, y2: yInput} // replace with your signals
+      console.log("Inputs: ", inputs)
+      const buffer = await getBinaryPromiseMove()
+      const witnessCalculator = await witness_calculator_move(buffer)
+      let buff;
+
+      try{
+        buff = await witnessCalculator.calculateWTNSBin(inputs, 0);
+        setErrorMessage("")
+      }catch(err){
+        console.log("Error: ", err)
+        setErrorMessage("You can not move to a distance superior than 16")
+        return
+      }
+
+      const { proof, publicSignals } = await snarkjs.groth16.prove(move_zkey,buff)
+      console.log("Pub: ", publicSignals)
+      console.log("Proof: ", proof)
+
+      let signer = await provider.getSigner();
+
+      //Curently using truffle default contract address
+      const contractAddress = "0x3b58A6bFD71e19F6b23978145048962C51a3E3FB"
+
+      const position_contract 
+      = new ethers.Contract(
+        contractAddress, 
+        positionsAbi.abi, 
+        signer)
+
+      const callData =  parseSolidityCalldata(proof, publicSignals)
+
+      console.log("Calldata: ", ...callData)
+      let transaction;
+      try {
+          transaction = 
+              await position_contract.move_to_new_position(
+                ...callData
+              ,
+              { gasLimit: 400000 })
+          await transaction.wait()
+          setCurrentX(xInput)
+          setCurrentY(yInput)
+          console.log("Moved to new position")
+      } catch(err) {
+          console.log("Error")
+          console.log(err)
+          setErrorMessage("Position already taken")
+      }
+    }
+  }
+  
+
   React.useEffect(() => {
     if (!loading && !error && data && data.transfers) {
       console.log({ transfers: data.transfers });
@@ -210,11 +283,21 @@ function App() {
         Dark Forest
       </Header>
       <Body>
-        {currentX ?
-          <label>Write the position where you want to move</label>
+      {currentY ?  
+          <React.Fragment>
+          <label>
+            You are at: {currentX}, {currentY}
+          </label>
+            <Button style={{ margin: '2%' }} onClick={() => moveToPosition()}>
+              Move to next position
+            </Button> 
+
+          </React.Fragment>  
           :
-          <label>Write the position where you want to spawn</label>
-        }
+          <Button onClick={() => initializePosition()}>
+            Initialize Position
+          </Button>
+        }   
         <div style={{ margin: '2%' }} >
           <label>
             x:
@@ -225,15 +308,7 @@ function App() {
             <input type="number" onChange={e => setYInput(e.target.value)} />        
           </label>
         </div>
-        {currentY ?  
-          <Button onClick={() => initializePosition()}>
-            Move to position
-          </Button> :
-
-          <Button onClick={() => initializePosition()}>
-            Initialize Position
-          </Button>
-        }   
+       
         {errorMessage && (
             <p className="error"> { errorMessage } </p>
           )

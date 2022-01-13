@@ -57,8 +57,8 @@ template Spawn() {
     mimc1.k <== 0;
     out_hash_x1_y1 <== mimc1.outs[0];
 
-    mimc2.ins[0] <== x1;
-    mimc2.ins[1] <== y1;
+    mimc2.ins[0] <== x2;
+    mimc2.ins[1] <== y2;
     mimc2.k <== 0;
     out_hash_x2_y2 <== mimc2.outs[0];
  }

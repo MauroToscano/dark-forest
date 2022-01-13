@@ -9,7 +9,7 @@ contract Positions is SpawnVerifier, MoveVerifier {
 
     mapping (uint256 => bool) public positions_used;
 
-    function insert_position(            
+    function insert_initial_position(            
             uint[2] memory a,
             uint[2][2] memory b,
             uint[2] memory c,
@@ -19,7 +19,6 @@ contract Positions is SpawnVerifier, MoveVerifier {
             spawnVerifyProof(a,b,c,input),
             "Failed proof check"
         );
-
         /*
             There should be another require in the future, 
             as to take in account the 5 mins windows.
@@ -29,5 +28,21 @@ contract Positions is SpawnVerifier, MoveVerifier {
         require(!positions_used[input[0]], "Position is already occupied");
 
         positions_used[input[0]] = true;
+    }
+
+    function move_to_new_position(            
+        uint[2] memory a,
+        uint[2][2] memory b,
+        uint[2] memory c,
+        uint[2] memory input) 
+    public{
+        require(
+            moveVerifyProof(a,b,c,input),
+            "Failed proof check"
+        );
+
+        //This isn't the proper action, 
+        positions_used[input[0]] = false;
+        positions_used[input[1]] = true;
     }
 }
