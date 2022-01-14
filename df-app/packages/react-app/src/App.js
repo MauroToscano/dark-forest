@@ -76,17 +76,20 @@ function WalletButton({ provider, loadWeb3Modal, logoutOfWeb3Modal }) {
 }
 
 
-
+//This is getting too big.
+//TO DO: Extract logic to other files
 function App() {
   const { loading, error, data } = useQuery(GET_TRANSFERS);
   const [provider, loadWeb3Modal, logoutOfWeb3Modal] = useWeb3Modal();
-
+  //Game modelrelated const
   const [xInput, setXInput] = useState();
   const [yInput, setYInput] = useState();
   const [currentX, setCurrentX] = useState();
   const [currentY, setCurrentY] = useState();
-
+  const [resources, setResources] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
+  //Curently using truffle default contract address
+  const contractAddress = "0x3b58A6bFD71e19F6b23978145048962C51a3E3FB"
 
   //Code from ETH scaffold with circuits
   function parseSolidityCalldata(prf, sgn) {
@@ -123,7 +126,7 @@ function App() {
   }
 
   /*
-  Full proove isn't working, a workaround posted in:
+  Full proove isn't working, a workaround was posted in:
   https://github.com/iden3/snarkjs/issues/107
 
   Adapted it to work in the frontend
@@ -158,7 +161,7 @@ function App() {
       .catch(reject);
    });
 
-
+  
   async function initializePosition() {
     if(provider){
       const inputs = {x: xInput,y: yInput} // replace with your signals
@@ -181,8 +184,6 @@ function App() {
 
       let signer = await provider.getSigner();
 
-      //Curently using truffle default contract address
-      const contractAddress = "0x3b58A6bFD71e19F6b23978145048962C51a3E3FB"
 
       const position_contract 
       = new ethers.Contract(
@@ -206,12 +207,29 @@ function App() {
           console.log("Initialized position")
       } catch(err) {
           console.log("Error")
-          console.log(err)
-          setErrorMessage("Position already taken")
+          console.log(err) 
+          const error_reason = 
+            err.message.match("(?<=revert )" + "(.*)" + "(?<=code)")[0].slice(0, -7);
+          console.log("Err match: ", error_reason)
+          setErrorMessage(error_reason)
       }
     }
   }
   
+
+  async function updateScore() {
+    const position_contract 
+    = new ethers.Contract(
+      contractAddress, 
+      positionsAbi.abi, 
+      provider)
+
+    const _resources = await position_contract.get_my_resources()
+    console.log("Resources from blockchain: ", _resources)
+    setResources(_resources)
+  }
+
+  //It's also updating the score
   async function moveToPosition() {
     if(provider){
       const inputs = {x1: currentX, y1: currentY, x2: xInput, y2: yInput} // replace with your signals
@@ -236,7 +254,6 @@ function App() {
       let signer = await provider.getSigner();
 
       //Curently using truffle default contract address
-      const contractAddress = "0x3b58A6bFD71e19F6b23978145048962C51a3E3FB"
 
       const position_contract 
       = new ethers.Contract(
@@ -257,7 +274,7 @@ function App() {
           await transaction.wait()
           setCurrentX(xInput)
           setCurrentY(yInput)
-          console.log("Moved to new position")
+          updateScore(position_contract)
       } catch(err) {
           console.log("Error")
           console.log(err)
@@ -291,7 +308,9 @@ function App() {
             <Button style={{ margin: '2%' }} onClick={() => moveToPosition()}>
               Move to next position
             </Button> 
-
+          <label>
+            You have collected {resources} resources
+          </label>
           </React.Fragment>  
           :
           <Button onClick={() => initializePosition()}>
