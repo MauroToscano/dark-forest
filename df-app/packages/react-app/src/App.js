@@ -218,11 +218,14 @@ function App() {
   
 
   async function updateScore() {
+
+    const signer = await provider.getSigner();
+
     const position_contract 
     = new ethers.Contract(
       contractAddress, 
       positionsAbi.abi, 
-      provider)
+      signer)
 
     const _resources = await position_contract.get_my_resources()
     console.log("Resources from blockchain: ", _resources)

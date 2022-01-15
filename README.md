@@ -22,7 +22,7 @@ Then in another shell
 
 make start_app
 
-Also, remember to add truffle local network to metamask!
+Also, remember to add truffle local network to metamask and reset the account after restarting the network, else you will see an invalid nonce error (Advanced options in metamask)
 
 Usually:
 
@@ -36,3 +36,6 @@ And import a test account with a test private key, for example:
 
 (If deploying with remix or other tool, Truffle can be skipped, ganache cli is included in the nix-shell)
 
+To interact with the contract directly, use:
+
+let specificInstance = await Positions.at("0x3b58A6bFD71e19F6b23978145048962C51a3E3FB");
