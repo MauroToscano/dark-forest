@@ -8,7 +8,6 @@ import './Verifiers.sol';
 
 contract Positions is SpawnVerifier, MoveVerifier {
 
-    event position_eval(uint256 position, uint8 remainder);
     /*
         A commentary on structs: Smaller values get packed together.
     */
@@ -97,8 +96,6 @@ contract Positions is SpawnVerifier, MoveVerifier {
         //This gives 3 / 12 = 1 / 4 chance of a planet
         // (29 30) (26, 26) both have a planet, for testing purposes
         uint8 remainder = uint8(position % 12);
-
-        emit position_eval(position, remainder);
         
         if (remainder < 4){
             return remainder;
