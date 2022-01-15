@@ -79,13 +79,11 @@ contract Positions is SpawnVerifier, MoveVerifier {
             player_resources[msg.sender] = 
                 player_resources[msg.sender] + from_planet_i - positions[input[0]].exploited_resources;
             positions[input[0]].exploited_resources = from_planet_i;
-            emit LogB(msg.sender, positions[input[0]].resource_claimer, from_planet_i, positions[input[0]].exploited_resources, player_resources[msg.sender]);
         }
         // Could set the claimer always,
         // but setting variables in the blockchain is expensive
         if(planet_i(input[1]) > 0){
             positions[input[1]].resource_claimer = msg.sender;
-            emit LogA(positions[input[1]].resource_claimer);
         }
         //Safe math should be used on the release (or solidity 0.8)
         positions[input[0]].players_in_position--;
