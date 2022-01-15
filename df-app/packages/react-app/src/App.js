@@ -1,3 +1,5 @@
+ /* global BigInt */
+
 import { useQuery } from "@apollo/react-hooks";
 import React, { useEffect, useState } from "react";
 
@@ -88,6 +90,7 @@ function App() {
   const [currentY, setCurrentY] = useState();
   const [resources, setResources] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
+  const [positionMaxResources, setpositionMaxResources] = useState(0)
   //Curently using truffle default contract address
   const contractAddress = "0x3b58A6bFD71e19F6b23978145048962C51a3E3FB"
 
@@ -123,6 +126,15 @@ function App() {
     ];
 
     return calldata;
+  }
+
+  //This is just for showing a text on the web
+  //Since the function is public, it's cheaper to not call the contract
+  //If it changes in the contract, we have to chagne it here
+  function updatePositionResources(positionHash){
+    const remainder = BigInt(positionHash) % BigInt(12)
+    setPositionResources(remainder < 4 ? remainder : 0)
+    console.log("Position max resources:", positionMaxResources)
   }
 
   /*
@@ -172,7 +184,6 @@ function App() {
       try{
         buff = await witnessCalculator.calculateWTNSBin(inputs, 0);
         setErrorMessage("")
-
       }catch(err){
         console.log("Error: ", err)
         setErrorMessage("Position not validid \n 32 < d({x,y},{0,0}) < 64")
@@ -278,6 +289,7 @@ function App() {
           setCurrentX(xInput)
           setCurrentY(yInput)
           updateScore(position_contract)
+          updatePositionResources(publicSignals[1])
       } catch(err) {
           console.log("Error")
           console.log(err)
@@ -308,6 +320,9 @@ function App() {
           <label>
             You are at: {currentX}, {currentY}
           </label>
+          {positionMaxResources > 0 && 
+            <label> You have landed on a planet </label>
+          }
             <Button style={{ margin: '2%' }} onClick={() => moveToPosition()}>
               Move to next position
             </Button> 
