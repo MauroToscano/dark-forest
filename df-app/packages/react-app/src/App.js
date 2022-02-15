@@ -131,11 +131,11 @@ function App() {
   //This is just for showing a text on the web
   //Since the function is public, it's cheaper to not call the contract
   //If it changes in the contract, we have to chagne it here
-  function updatePositionResources(positionHash){
+  /*function updatePositionResources(positionHash){
     const remainder = BigInt(positionHash) % BigInt(12)
     setPositionResources(remainder < 4 ? remainder : 0)
     console.log("Position max resources:", positionMaxResources)
-  }
+  }*/
 
   /*
   Full proove isn't working, a workaround was posted in:
@@ -289,7 +289,7 @@ function App() {
           setCurrentX(xInput)
           setCurrentY(yInput)
           updateScore(position_contract)
-          updatePositionResources(publicSignals[1])
+          //updatePositionResources(publicSignals[1])
       } catch(err) {
           console.log("Error")
           console.log(err)
