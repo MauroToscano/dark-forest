@@ -15,7 +15,8 @@ mkShell {
     git
     libiconv
     nixpkgs.latest.rustChannels.stable.rust
-  ]
+    nodePackages.ganache-cli
+]
   ++ optional stdenv.isLinux inotify-tools # For file_system on Linux.
   ++ optionals stdenv.isDarwin (with darwin.apple_sdk.frameworks; [
     # For file_system on macOS.
